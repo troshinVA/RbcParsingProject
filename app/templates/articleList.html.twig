@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+    <ul class="list-group list-group-light mb-3">
+        {% for article in articles %}
+            <li class="list-group-item">
+                <h5 class="fw-bold">{{ article.title }}</h5>
+                <p class="text-muted mb-2 fw-bold">{{ article.time }}, {{ article.category }}</p>
+                <p class="text-muted mb-0">
+                    {{ article.description }}
+                </p>
+                <br/>
+                <p>
+                    <a href="{{ article.body ? path('detail_article', {'id': article.id}) : article.href }}">
+                        <button type="button" class="btn btn-primary">Подробнее</button>
+                    </a>
+                </p>
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}

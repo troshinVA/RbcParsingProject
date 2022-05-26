@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+    <div class="card">
+        <div class="card-body">
+            {% if errors %}
+                <h2 class="card-title text-lg-center">Что то пошло не так</h2>
+                <ul>
+                    {% for error in errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <h2 class="card-title text-lg-center">404 Страница не найдена</h2>
+            {% endif %}
+            <a href="{{ path('rbc_news') }}" class="btn btn-primary d-block">К списку новостей</a>
+        </div>
+    </div>
+{% endblock %}
