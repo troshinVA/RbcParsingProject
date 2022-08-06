@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
 
-class RbcNewsController extends AbstractController
+class RbcNewsController extends ApiController
 {
     private const URL = 'https://www.rbc.ru/newspaper/';
     private const NEWS_COUNT = 15;
@@ -28,7 +28,7 @@ class RbcNewsController extends AbstractController
     }
 
     /**
-     * @Route("/", name="rbc_news")
+     * @Route("/api/articles-list", name="rbc_news")
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function newsList()
@@ -36,30 +36,39 @@ class RbcNewsController extends AbstractController
         try {
             $this->saveNewArticlesIfNeeded();
         } catch (\Exception $e) {
-            return $this->render('notFound.html.twig', ['errors' => $e->getMessage()]);
+            return $this->respond([
+                [
+                    'error' => $e->getMessage(),
+                ]
+            ]);
         }
 
         $articles = $this->articleRepository->findBy([], ['id' => 'desc'], self::NEWS_COUNT);
         $articlesForView = $this->getArticlesListForView($articles);
 
-        return $this->render('articleList.html.twig', ['articles' => $articlesForView]);
+        return $this->respond([
+            [
+                'articles' => $articlesForView,
+                'count' => 0
+            ]
+        ]);
     }
 
-    /**
-     * @Route("/article/{id}", name="detail_article", requirements={"id"="\d+"})
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     */
-    public function detailPage(Request $request)
-    {
-        $article = $this->articleRepository->find($request->get('id'));
-        if ($article) {
-            return $this->render('detailPage.html.twig', ['article' => $article->convertToArray()]);
-        }
+//    /**
+//     * @Route("/article/{id}", name="detail_article", requirements={"id"="\d+"})
+//     * @throws \GuzzleHttp\Exception\GuzzleException
+//     */
+//    public function detailPage(Request $request)
+//    {
+//        $article = $this->articleRepository->find($request->get('id'));
+//        if ($article) {
+//            return $this->render('detailPage.html.twig', ['article' => $article->convertToArray()]);
+//        }
+//
+//        return $this->render('notFound.html.twig');
+//    }
 
-        return $this->render('notFound.html.twig');
-    }
-
-    private function getAticles($lastArticleHref = null)
+    private function getArticles($lastArticleHref = null): array
     {
         $content = $this->client->get(self::URL)->getBody()->getContents();
         $this->crawler->addHtmlContent($content);
@@ -101,7 +110,7 @@ class RbcNewsController extends AbstractController
         return $articles;
     }
 
-    private function getDetailPageContent(string $href, Article $article)
+    private function getDetailPageContent(string $href, Article $article): void
     {
         $detailContent = $this->client->get($href)->getBody()->getContents();
         $detailCrawler = new Crawler($detailContent);
@@ -119,14 +128,15 @@ class RbcNewsController extends AbstractController
         }
     }
 
-    private function prepareDescription(string $body)
+    private function prepareDescription(string $body): string
     {
         $string = mb_substr($body, 0, 200);
         return $string . '...';
     }
 
-    private function getArticlesListForView($articles)
+    private function getArticlesListForView($articles): array
     {
+        $articlesForView = [];
         /** @var Article $article */
         foreach ($articles as $article) {
             $articlesForView[] = $article->convertToArray();
@@ -135,15 +145,12 @@ class RbcNewsController extends AbstractController
         return $articlesForView;
     }
 
-    private function saveNewArticlesIfNeeded()
+    private function saveNewArticlesIfNeeded(): void
     {
         $lastRow = $this->articleRepository->findOneBy([], ['id' => 'desc']);
-        $lastHref = null;
-        if ($lastRow) {
-            $lastHref = $lastRow->getHref();
-        }
+        $lastHref = $lastRow?->getHref();
 
-        $articles = $this->getAticles($lastHref);
+        $articles = $this->getArticles($lastHref);
         if ($articles) {
             krsort($articles);
             $this->articleRepository->addList($articles, true);

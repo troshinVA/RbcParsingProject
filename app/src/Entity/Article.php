@@ -28,7 +28,7 @@ class Article
     private $body;
 
     /**
-     * @ORM\Column(type="time")
+     * @ORM\Column(type="time", nullable=true)
      */
     private $post_time;
 
@@ -52,6 +52,12 @@ class Article
      */
     private $href;
 
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $rating;
+
+
     public function __construct($href)
     {
         $this->href = $href;
@@ -69,7 +75,7 @@ class Article
 
     public function setTitle(string $title): self
     {
-        $this->title = $title;
+        $this->title = trim($title);
 
         return $this;
     }
@@ -81,7 +87,7 @@ class Article
 
     public function setBody(string $body): self
     {
-        $this->body = $body;
+        $this->body = trim($body);
 
         return $this;
     }
@@ -105,7 +111,8 @@ class Article
 
     public function setCategory(?string $category): self
     {
-        $this->category = $category;
+        $arr = explode(',', trim($category));
+        $this->category = $arr[0];
 
         return $this;
     }
@@ -117,7 +124,7 @@ class Article
 
     public function setImg(?string $img): self
     {
-        $this->img = $img;
+        $this->img = trim($img);
 
         return $this;
     }
@@ -129,7 +136,7 @@ class Article
 
     public function setDescription(?string $description): self
     {
-        $this->description = $description;
+        $this->description = trim($description);
 
         return $this;
     }
@@ -141,7 +148,19 @@ class Article
 
     public function setHref(?string $href): self
     {
-        $this->href = $href;
+        $this->href = trim($href);
+
+        return $this;
+    }
+
+    public function getRating(): ?int
+    {
+        return $this->rating;
+    }
+
+    public function setRating(?int $rating): self
+    {
+        $this->rating = $rating;
 
         return $this;
     }
@@ -154,9 +173,10 @@ class Article
             'body' => $this->getBody(),
             'description' => $this->getDescription(),
             'category' => $this->getCategory(),
-            'time' => ($this->getPostTime())->format('H:i'),
+            'time' => ($this->getPostTime())?->format('H:i'),
             'img' => $this->getImg(),
             'href' => $this->getHref(),
+            'rating' => $this->getRating()
         ];
     }
 }

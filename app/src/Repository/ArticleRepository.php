@@ -50,6 +50,12 @@ class ArticleRepository extends ServiceEntityRepository
         }
     }
 
+    public function update(Article $entity): void
+    {
+        $this->getEntityManager()->merge($entity);
+        $this->getEntityManager()->flush();
+    }
+
 //    /**
 //     * @return Article[] Returns an array of Article objects
 //     */
