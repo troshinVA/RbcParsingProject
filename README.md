@@ -7,7 +7,7 @@
 5. Внутри запустить composer install
 6. Запустить миграции symfony console doctrine:migration:migrate
 
-Чтобы протестировать методы можно либо запустить фронт предварительно слив его с https://github.com/troshinVA/RbcParsingVueFront
+Протестировать методы можно запустив локально фронт предварительно слив его с https://github.com/troshinVA/RbcParsingVueFront
 
 Либо протестировать api методы по получению списка и обновлению методов через Postman:
 1. POST localhost:8088/articles
