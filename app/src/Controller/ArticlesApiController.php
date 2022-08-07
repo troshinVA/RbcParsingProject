@@ -28,6 +28,7 @@ class ArticlesApiController extends ApiController
     public function articlesAction(Request $request)
     {
         $postParams = json_decode($request->getContent());
+        $isLastPage = false;
         try {
             $this->saveNewArticlesIfNeeded();
         } catch (\Exception $e) {
