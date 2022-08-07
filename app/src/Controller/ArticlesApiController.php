@@ -34,29 +34,38 @@ class ArticlesApiController extends ApiController
             return $this->respondWithErrors($e->getMessage());
         }
 
-        if (!$lastArticleId = $postParams->lastId) {
-            /** @var Article $lastRecord */
-            $lastRecord = ($this->articleRepository->findBy(array(),array('id'=>'DESC'),1,0));
-            if (!empty($lastRecord)) {
-                $lastArticleId = $lastRecord[0]->getId() + 1;
-            }
+        $criteria = new Criteria();
+        if (property_exists($postParams, 'firstId')) {
+            $criteria->where(Criteria::expr()?->gt('id', $postParams->firstId))
+                ->orderBy(['id' => 'desc']);
+        } else if ($postParams->lastId) {
+            $criteria->where(Criteria::expr()?->lt('id', $postParams->lastId))
+                ->orderBy(['id' => 'desc'])
+                ->setMaxResults($postParams->itemsOnPage);
+        } else {
+            $criteria->orderBy(['id' => 'desc'])
+                ->setMaxResults($postParams->itemsOnPage);
         }
 
-        $criteria = new Criteria();
-        $criteria->where(Criteria::expr()?->lt('id', $lastArticleId))
-            ->orderBy(['id' => 'desc'])
-            ->setMaxResults($postParams->itemsOnPage)
-        ;
         try {
             $articles = $this->articleRepository->matching($criteria);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             return $this->respondWithErrors($e->getMessage());
         }
-        $articlesForView = $this->getArticlesListForView($articles);
+
+        $articlesForView = [];
+        if ($articles->count() > 0) {
+            $articlesForView = $this->getArticlesListForView($articles);
+        } else {
+            $isLastPage = true;
+        }
 
         return $this->respond(
             [
                 'articles' => $articlesForView,
+                'meta' => [
+                    'isLastPage' => $isLastPage
+                ]
             ],
         );
     }
